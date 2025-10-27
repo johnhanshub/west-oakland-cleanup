@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>West Oakland CleanUp</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: white;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Enable scrolling only below 810px breakpoint */
+        @media (max-width: 810px) {
+            body {
+                min-height: 100vh;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+        }
+        
+        .background-asset {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95vw;
+            height: auto;
+            z-index: -1;
+            opacity: 1;
+            min-width: 400px;
+            max-width: 1500px;
+        }
+        
+        /* Responsive scaling for background asset */
+        @media (max-width: 768px) {
+            .background-asset {
+                width: 95vw;
+                min-width: 350px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .background-asset {
+                width: 90vw;
+                min-width: 300px;
+            }
+        }
+        
+        @media (min-width: 1400px) {
+            .background-asset {
+                width: 85vw;
+                max-width: 1600px;
+            }
+        }
+        
+        .trash-item {
+            position: fixed;
+            width: 80px;
+            height: auto;
+            opacity: 1;
+            animation: scaleIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, float 3s ease-in-out infinite;
+            animation-delay: var(--scale-delay, 0s), var(--float-delay, 0s);
+            transform: scale(0);
+            cursor: grab;
+            user-select: none;
+            max-width: 15vw;
+            max-height: 15vh;
+            min-width: 40px;
+            min-height: 40px;
+        }
+        
+        .trash-item:active {
+            cursor: grabbing;
+        }
+        
+        .trash-bag {
+            width: 200px;
+            height: auto;
+            position: fixed;
+            bottom: 20vh;
+            left: 51%;
+            transform: translateX(-50%);
+            transform-origin: center bottom;
+            z-index: 10;
+            cursor: pointer;
+        }
+        
+        /* Keep trash bag fixed above 810px, absolute below */
+        @media (max-width: 810px) {
+            .trash-bag {
+                position: absolute;
+                bottom: calc(100vh - 80vh);
+            }
+        }
+        
+        .trash-item.dragging {
+            opacity: 0.5;
+            z-index: 100;
+        }
+        
+        .trash-item.removed {
+            display: none;
+        }
+        
+        .trash-item.celebrating {
+            z-index: 1000;
+            pointer-events: none;
+            animation: celebrateItem 0.6s ease-out forwards;
+        }
+        
+        @keyframes celebrateItem {
+            0% {
+                transform: scale(1) rotate(0deg) var(--preserve-transform, );
+                opacity: 1;
+            }
+            25% {
+                transform: scale(1.5) rotate(15deg) var(--preserve-transform, );
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.8) rotate(-15deg) var(--preserve-transform, );
+                opacity: 0.6;
+            }
+            75% {
+                transform: scale(1.5) rotate(10deg) var(--preserve-transform, );
+                opacity: 0.4;
+            }
+            100% {
+                transform: scale(1) rotate(0deg) var(--preserve-transform, );
+                opacity: 0.15;
+            }
+        }
+        
+        .trash-bag.celebrating {
+            animation: scaleUp 0.3s ease-out forwards;
+        }
+        
+        @keyframes scaleUp {
+            0% {
+                transform: translateX(-50%) scale(var(--current-scale, 1));
+            }
+            100% {
+                transform: translateX(-50%) scale(var(--target-scale, 1.05));
+            }
+        }
+        
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0) var(--preserve-x-flip, ) var(--preserve-rotation, );
+            }
+            60% {
+                transform: scale(1.15) var(--preserve-x-flip, ) var(--preserve-rotation, );
+            }
+            100% {
+                transform: scale(1) var(--preserve-x-flip, ) var(--preserve-rotation, );
+            }
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0px) translateX(0px) rotate(var(--rotation)) var(--preserve-x-flip, );
+            }
+            25% {
+                transform: translateY(-8px) translateX(5px) rotate(var(--rotation)) var(--preserve-x-flip, );
+            }
+            50% {
+                transform: translateY(-10px) translateX(0px) rotate(var(--rotation)) var(--preserve-x-flip, );
+            }
+            75% {
+                transform: translateY(-8px) translateX(-5px) rotate(var(--rotation)) var(--preserve-x-flip, );
+            }
+            100% {
+                transform: translateY(0px) translateX(0px) rotate(var(--rotation)) var(--preserve-x-flip, );
+            }
+        }
+        
+        .can {
+            top: 35%;
+            left: 8%;
+            --rotation: -15deg;
+            --scale-delay: 0.2s;
+            --float-delay: 0.3s;
+        }
+        
+        .cardboard-box {
+            top: 30%;
+            right: 8%;
+            --rotation: 20deg;
+            --scale-delay: 0.4s;
+            --float-delay: 0.5s;
+            width: 120px;
+        }
+        
+        .milk-jug {
+            top: 12%;
+            left: 6%;
+            --rotation: -25deg;
+            --scale-delay: 0.6s;
+            --float-delay: 1s;
+            width: 95px;
+        }
+        
+        .egg-carton {
+            top: 10%;
+            left: 25%;
+            --rotation: -15deg;
+            --scale-delay: 0.7s;
+            --float-delay: 1.3s;
+            width: 110px;
+            filter: sepia(1) saturate(1.2) brightness(0.7);
+        }
+        
+        .plastic-cup {
+            top: 75%;
+            left: 6%;
+            --rotation: -10deg;
+            --scale-delay: 0.9s;
+            --float-delay: 2s;
+        }
+        
+        .soda-can-1 {
+            top: 17%;
+            left: 85%;
+            --rotation: 15deg;
+            --scale-delay: 1.1s;
+            --float-delay: 0.8s;
+        }
+        
+        .soda-can-2 {
+            top: 70%;
+            right: 6%;
+            --rotation: -30deg;
+            --scale-delay: 1.3s;
+            --float-delay: 1.2s;
+        }
+        
+        .paper-bag {
+            top: 4%;
+            left: 50%;
+            --rotation: -55deg;
+            --scale-delay: 1.5s;
+            --float-delay: 1.8s;
+            width: 85px;
+            transform: scale(0) rotate(-55deg);
+            --preserve-rotation: rotate(-55deg);
+        }
+        
+        .pudding-cup {
+            top: 30%;
+            left: 12%;
+            --rotation: -40deg;
+            --scale-delay: 1.7s;
+            --float-delay: 0.9s;
+            width: 65px;
+        }
+        
+        /* Additional trash assets for more density - with variations */
+        .orange-jug-2 {
+            top: 45%;
+            left: 65%;
+            --rotation: 10deg;
+            --scale-delay: 1.9s;
+            --float-delay: 0.7s;
+            width: 95px;
+            opacity: 1;
+            filter: brightness(1.1) contrast(1.1) saturate(0.8);
+            transform: scale(0) scaleX(-1);
+            --preserve-x-flip: scaleX(-1);
+        }
+        
+        .egg-carton-2 {
+            top: 50%;
+            right: 6%;
+            --rotation: 10deg;
+            --scale-delay: 2.1s;
+            --float-delay: 1.5s;
+            width: 100px;
+            opacity: 1;
+            filter: sepia(0.3) hue-rotate(20deg);
+            transform: scale(0) scaleX(-1);
+            --preserve-x-flip: scaleX(-1);
+        }
+        
+        .plastic-cup-2 {
+            top: 35%;
+            left: 82%;
+            --rotation: 40deg;
+            --scale-delay: 2.3s;
+            --float-delay: 2.2s;
+            width: 65px;
+        }
+        
+        .info-asset {
+            position: fixed;
+            width: 140px;
+            height: auto;
+            z-index: 5;
+            opacity: 1;
+        }
+        
+        /* Form container styling */
+        .form-container {
+            position: fixed;
+            width: 230px;
+            background-color: transparent;
+            padding: 0 20px 20px 20px;
+            z-index: 5;
+            visibility: hidden;
+        }
+        
+        .form-container h2 {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Helvetica Neue", sans-serif;
+            font-weight: 100;
+            font-size: 20px;
+            margin: 0 0 5px 0;
+            line-height: 1;
+        }
+        
+        .form-group {
+            margin-bottom: 5px;
+            margin-top: -5px;
+            position: relative;
+        }
+        
+        .form-group:first-child {
+            margin-top: -8px;
+        }
+        
+        .form-label {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Helvetica Neue", sans-serif;
+            font-weight: 100;
+            font-size: 16px;
+            color: #999999;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .form-input {
+            width: 85%;
+            padding: 0;
+            margin: -2px 0 0 0;
+            border: none;
+            border-bottom: 0.5px solid #666666;
+            background-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Helvetica Neue", sans-serif;
+            font-weight: 100;
+            font-size: 12px;
+            color: #000000;
+            text-align: left;
+        }
+        
+        .form-input::placeholder {
+            color: #999999;
+            font-weight: 100;
+        }
+        
+        .form-input:not(:placeholder-shown) {
+            font-weight: 600;
+            color: #000000;
+        }
+        
+        @media (max-width: 810px) {
+            .form-input {
+                width: 100%;
+                text-align: center;
+            }
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-bottom-color: #999999;
+            font-weight: 600;
+            color: #000000;
+        }
+        
+        .form-input::placeholder {
+            color: #666666;
+        }
+        
+        .form-container {
+            left: calc(80% + 10px);
+            top: calc(85vh - 5px);
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 1068px) {
+            .form-container {
+                right: calc(18% - 170px);
+            }
+        }
+        
+        @media (max-width: 810px) {
+            .form-container {
+                position: absolute;
+                left: 50%;
+                top: calc(100vh + 18vh);
+                transform: translateX(-50%);
+                text-align: center;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .form-container {
+                right: calc(22% - 170px);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .form-container {
+                right: calc(10% - 170px);
+                left: auto;
+                width: 200px;
+                max-width: none;
+            }
+        }
+
+        .date-asset {
+            left: 26%;
+            top: 85vh;
+        }
+        
+        .location-asset {
+            left: 51%;
+            top: 85vh;
+            transform: translateX(-50%);
+        }
+        
+        .bring-asset {
+            right: 26%;
+            top: 85vh;
+        }
+        
+        .footer {
+            position: absolute;
+            width: 100%;
+            height: 20vh;
+            top: calc(100vh + 10vh);
+            left: 0;
+            background: transparent;
+        }
+        
+        @media (max-width: 810px) {
+            .footer {
+                top: calc(100vh + 25vh);
+                height: 5vh;
+            }
+        }
+        
+        /* Responsive spacing for bottom assets */
+        @media (max-width: 1068px) {
+            .date-asset {
+                left: 24%;
+            }
+            .bring-asset {
+                right: 24%;
+            }
+        }
+        
+        @media (max-width: 810px) {
+            .date-asset {
+                left: 15%;
+            }
+            .bring-asset {
+                right: 15%;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .date-asset {
+                left: 27%;
+            }
+            .bring-asset {
+                right: 27%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .date-asset {
+                left: 10%;
+            }
+            .bring-asset {
+                right: 10%;
+            }
+        }
+        
+        /* Stack bottom assets vertically on small screens */
+        @media (max-width: 810px) {
+            .trash-item {
+                position: absolute;
+            }
+            .trash-bag {
+                position: absolute;
+                bottom: calc(100vh - 80vh);
+            }
+            .background-asset {
+                position: absolute;
+                top: calc(30vh);
+            }
+            .info-asset {
+                position: absolute;
+            }
+            .date-asset {
+                left: 50%;
+                top: calc(100vh - 15vh);
+                transform: translateX(-50%);
+            }
+            .location-asset {
+                left: 50%;
+                top: calc(100vh - 3vh);
+                transform: translateX(-50%);
+            }
+            .bring-asset {
+                left: 50%;
+                top: calc(100vh + 5vh);
+                transform: translateX(-50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background asset -->
+    <img src="Assets/Join the next cleanup.png" alt="Join the next cleanup" class="background-asset">
+    
+    <!-- Main trash bag centered at bottom -->
+    <img src="Assets/Trash Bag.png" alt="Trash Bag" class="trash-bag">
+    
+    <!-- Scattered trash items -->
+    <img src="Assets/Can.png" alt="Can" class="trash-item can">
+    <img src="Assets/Cardboard Box.png" alt="Cardboard Box" class="trash-item cardboard-box">
+    <img src="Assets/Milk Jug.png" alt="Milk Jug" class="trash-item milk-jug">
+    <img src="Assets/Egg Carton.png" alt="Egg Carton" class="trash-item egg-carton">
+    <img src="Assets/Plastic Cup.png" alt="Plastic Cup" class="trash-item plastic-cup">
+    <img src="Assets/Soda Can 1.png" alt="Soda Can 1" class="trash-item soda-can-1">
+    <img src="Assets/Soda Can 2.png" alt="Soda Can 2" class="trash-item soda-can-2">
+    <img src="Assets/Paper Bag.png" alt="Paper Bag" class="trash-item paper-bag">
+    <img src="Assets/Pudding Cup.png" alt="Pudding Cup" class="trash-item pudding-cup">
+    
+    <!-- Additional trash assets for more density -->
+    <img src="Assets/Orange Jug.png" alt="Orange Jug 2" class="trash-item orange-jug-2">
+    <img src="Assets/Egg Carton.png" alt="Egg Carton 2" class="trash-item egg-carton-2">
+    <img src="Assets/Yellow Cup.png" alt="Yellow Cup" class="trash-item plastic-cup-2">
+    
+    <!-- Info assets at bottom -->
+    <img src="Assets/Date.png" alt="Date" class="info-asset date-asset">
+    <img src="Assets/Location.png" alt="Location" class="info-asset location-asset">
+    <img src="Assets/Bring.png" alt="Bring" class="info-asset bring-asset">
+    
+    <!-- Form container -->
+    <div class="form-container">
+        <h2>🤝</h2>
+        <div class="form-group">
+            <input type="text" class="form-input" placeholder="First Name">
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-input" placeholder="Last Name">
+        </div>
+        <div class="form-group">
+            <input type="email" class="form-input" placeholder="Email">
+        </div>
+    </div>
+    
+    <!-- Blank footer -->
+    <div class="footer"></div>
+    
+    <script>
+        // Ensure page starts at top when scrolling is enabled and reset asset positions
+        window.addEventListener('load', function() {
+            if (window.innerWidth <= 810) {
+                window.scrollTo(0, 0);
+            }
+            
+            // Force reflow to ensure consistent positioning
+            document.body.offsetHeight;
+        });
+        
+        // Get all trash items and the trash bag
+        const trashItems = document.querySelectorAll('.trash-item');
+        const trashBag = document.querySelector('.trash-bag');
+        
+        // Add click event to trash bag to refresh the page
+        trashBag.addEventListener('click', function() {
+            window.scrollTo(0, 0);
+            window.location.reload();
+        });
+        
+        // Track the current scale of the trash bag
+        let currentScale = 1;
+        
+        // Make trash items draggable and clickable
+        trashItems.forEach(item => {
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+            let clickStartTime = 0;
+            
+            // Get computed position
+            function getPosition(el) {
+                const rect = el.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(el);
+                const isFixed = computedStyle.position === 'fixed';
+                
+                if (isFixed) {
+                    // For fixed elements, use viewport coordinates
+                    return {
+                        left: rect.left,
+                        top: rect.top
+                    };
+                } else {
+                    // For absolute elements, add scroll offset
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    return {
+                        left: rect.left + scrollX,
+                        top: rect.top + scrollY
+                    };
+                }
+            }
+            
+            item.addEventListener('mousedown', function(e) {
+                if (item.classList.contains('removed') || item.classList.contains('celebrating')) return;
+                
+                e.preventDefault();
+                clickStartTime = Date.now();
+                isDragging = true;
+                item.classList.add('dragging');
+                
+                // Store starting positions
+                startX = e.clientX;
+                startY = e.clientY;
+                const pos = getPosition(item);
+                startLeft = pos.left;
+                startTop = pos.top;
+                
+                // Pause the float animation
+                item.style.animationPlayState = 'paused';
+                
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', onDragEnd);
+            });
+            
+            // Add click event listener for click-to-move functionality
+            item.addEventListener('click', function(e) {
+                if (item.classList.contains('removed') || item.classList.contains('celebrating')) return;
+                
+                // Only trigger click-to-move if it wasn't a drag operation
+                const clickDuration = Date.now() - clickStartTime;
+                if (clickDuration < 200 && !isDragging) {
+                    e.preventDefault();
+                    // Simulate drag and drop by directly calling onDragEnd with trash bag position
+                    simulateDragToTrash(item);
+                }
+            });
+            
+            // Function to simulate dragging item to trash bag
+            function simulateDragToTrash(item) {
+                // Set up the item as if it's being dragged
+                isDragging = true;
+                item.classList.add('dragging');
+                
+                // Pause the float animation
+                item.style.animationPlayState = 'paused';
+                
+                // Get trash bag position based on its positioning
+                const trashBagRect = trashBag.getBoundingClientRect();
+                const trashBagStyle = window.getComputedStyle(trashBag);
+                const isTrashBagFixed = trashBagStyle.position === 'fixed';
+                
+                let bagCenterX, bagCenterY;
+                if (isTrashBagFixed) {
+                    // For fixed trash bag, use viewport coordinates
+                    bagCenterX = trashBagRect.left + trashBagRect.width / 2;
+                    bagCenterY = trashBagRect.top + trashBagRect.height / 2;
+                } else {
+                    // For absolute trash bag, add scroll offset
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    bagCenterX = trashBagRect.left + trashBagRect.width / 2 + scrollX;
+                    bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                }
+                
+                // Position item at trash bag center to trigger drop
+                item.style.left = bagCenterX + 'px';
+                item.style.top = bagCenterY + 'px';
+                item.style.right = 'auto';
+                
+                // Preserve any existing transforms
+                const computedStyle = window.getComputedStyle(item);
+                const existingTransform = computedStyle.transform;
+                if (existingTransform && existingTransform !== 'none') {
+                    item.style.transform = existingTransform;
+                } else {
+                    // Check if item has an x-flip that needs to be preserved
+                    const preserveXFlip = getComputedStyle(item).getPropertyValue('--preserve-x-flip');
+                    if (preserveXFlip && preserveXFlip.trim() !== '') {
+                        item.style.transform = preserveXFlip;
+                    } else {
+                        item.style.transform = 'none';
+                    }
+                }
+                
+                // Small delay to ensure the dragging state is properly set
+                setTimeout(() => {
+                    // Trigger the existing drop logic by calling onDragEnd
+                    // Create a mock event object with viewport coordinates
+                    const mockEvent = {
+                        clientX: bagCenterX,
+                        clientY: bagCenterY
+                    };
+                    
+                    // Call the existing onDragEnd function
+                    onDragEnd(mockEvent);
+                }, 10);
+            }
+            
+            function onDrag(e) {
+                if (!isDragging) return;
+                
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                // Calculate new position
+                const newLeft = startLeft + dx;
+                const newTop = startTop + dy;
+                
+                // Update position using left/top instead of transform
+                item.style.left = newLeft + 'px';
+                item.style.top = newTop + 'px';
+                item.style.right = 'auto';
+                
+                // Preserve any existing transforms (like scaleX(-1) for flipped items)
+                const computedStyle = window.getComputedStyle(item);
+                const existingTransform = computedStyle.transform;
+                if (existingTransform && existingTransform !== 'none') {
+                    item.style.transform = existingTransform;
+                } else {
+                    // Check if item has an x-flip that needs to be preserved
+                    const preserveXFlip = getComputedStyle(item).getPropertyValue('--preserve-x-flip');
+                    if (preserveXFlip && preserveXFlip.trim() !== '') {
+                        item.style.transform = preserveXFlip;
+                    } else {
+                        item.style.transform = 'none';
+                    }
+                }
+                
+                // Check if item has entered trash bag while dragging
+                const trashBagRect = trashBag.getBoundingClientRect();
+                const itemRect = item.getBoundingClientRect();
+                
+                const itemCenterX = itemRect.left + itemRect.width / 2;
+                const itemCenterY = itemRect.top + itemRect.height / 2;
+                
+                // Use the actual trash bag bounds for drop zone
+                const dropZoneTop = trashBagRect.top;
+                const dropZoneBottom = trashBagRect.bottom;
+                const dropZoneLeft = trashBagRect.left;
+                const dropZoneRight = trashBagRect.right;
+                
+                // If center of item is within trash bag bounds, auto-drop
+                if (itemCenterX >= dropZoneLeft && 
+                    itemCenterX <= dropZoneRight &&
+                    itemCenterY >= dropZoneTop && 
+                    itemCenterY <= dropZoneBottom) {
+                    
+                    // Trigger drop automatically
+                    onDragEnd(e);
+                }
+            }
+            
+            function onDragEnd(e) {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                item.classList.remove('dragging');
+                
+                // Resume animation
+                item.style.animationPlayState = 'running';
+                
+                // Check if item is over trash bag
+                const trashBagRect = trashBag.getBoundingClientRect();
+                const itemRect = item.getBoundingClientRect();
+                
+                const itemCenterX = itemRect.left + itemRect.width / 2;
+                const itemCenterY = itemRect.top + itemRect.height / 2;
+                
+                // Use the actual trash bag bounds for drop zone
+                const dropZoneTop = trashBagRect.top;
+                const dropZoneBottom = trashBagRect.bottom;
+                const dropZoneLeft = trashBagRect.left;
+                const dropZoneRight = trashBagRect.right;
+                
+                // Check if center of item is within trash bag bounds
+                if (itemCenterX >= dropZoneLeft && 
+                    itemCenterX <= dropZoneRight &&
+                    itemCenterY >= dropZoneTop && 
+                    itemCenterY <= dropZoneBottom) {
+                    
+                    // Increase scale
+                    currentScale += 0.05;
+                    
+                    // Set CSS variables for the animation
+                    trashBag.style.setProperty('--current-scale', (currentScale - 0.05));
+                    trashBag.style.setProperty('--target-scale', currentScale);
+                    
+                    // Calculate position inside trash bag using circular radius centered
+                    // Account for scroll offset to get correct positioning
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    const bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25 + scrollX;
+                    const bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                    
+                    // Use the smaller dimension as the radius to ensure circle fits within bag
+                    const radius = Math.min(trashBagRect.width, trashBagRect.height) / 3;
+                    
+                    // Random angle and distance from center
+                    const angle = Math.random() * Math.PI * 2;
+                    // Distance from center to edge, using 80% max to keep items well inside
+                    const distance = radius * 0.8 * Math.random();
+                    
+                    const randomX = Math.cos(angle) * distance;
+                    const randomY = Math.sin(angle) * distance;
+                    
+                    const finalX = bagCenterX + randomX;
+                    const finalY = bagCenterY + randomY;
+                    
+                    // Store the final position and reference info for resize
+                    item.dataset.finalX = finalX;
+                    item.dataset.finalY = finalY;
+                    item.dataset.oldCenterX = bagCenterX;
+                    item.dataset.oldCenterY = bagCenterY;
+                    item.dataset.oldRadius = radius;
+                    
+                    // Preserve flip transform for celebration animation
+                    const computedStyle = window.getComputedStyle(item);
+                    const existingTransform = computedStyle.transform;
+                    if (existingTransform && existingTransform !== 'none') {
+                        item.style.setProperty('--preserve-transform', existingTransform);
+                    } else {
+                        // Check if item has an x-flip that needs to be preserved
+                        const preserveXFlip = getComputedStyle(item).getPropertyValue('--preserve-x-flip');
+                        if (preserveXFlip && preserveXFlip.trim() !== '') {
+                            item.style.setProperty('--preserve-transform', preserveXFlip);
+                        }
+                    }
+                    
+                    // Add celebration animation
+                    item.classList.add('celebrating');
+                    trashBag.classList.add('celebrating');
+                    
+                    // Keep the item visible but faded after animation
+                    setTimeout(() => {
+                        // Position item inside trash bag
+                        if (item.dataset.finalX && item.dataset.finalY) {
+                            // Convert to viewport coordinates for fixed positioning
+                            const itemStyle = window.getComputedStyle(item);
+                            const isItemFixed = itemStyle.position === 'fixed';
+                            
+                            if (isItemFixed) {
+                                // For fixed items, subtract scroll offset to get viewport coordinates
+                                const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                                const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                                item.style.left = (parseFloat(item.dataset.finalX) - scrollX) + 'px';
+                                item.style.top = (parseFloat(item.dataset.finalY) - scrollY) + 'px';
+                            } else {
+                                // For absolute items, use coordinates directly
+                                item.style.left = item.dataset.finalX + 'px';
+                                item.style.top = item.dataset.finalY + 'px';
+                            }
+                            item.style.right = 'auto';
+                        }
+                        
+                        trashBag.classList.remove('celebrating');
+                        // Keep the scale permanently by setting it directly
+                        trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
+                    }, 600);
+                } else {
+                    // Keep item at the current dropped position
+                    // The left and top are already set during dragging, so no change needed
+                }
+                
+                                 document.removeEventListener('mousemove', onDrag);
+                 document.removeEventListener('mouseup', onDragEnd);
+             }
+         });
+         
+         // Handle window resize to reposition assets that are in the trash bag
+         window.addEventListener('resize', function() {
+             trashItems.forEach(item => {
+                 // Only reposition items that are celebrating (dropped in trash bag)
+                 if (item.classList.contains('celebrating') || (item.dataset.finalX && item.dataset.finalY)) {
+                     const trashBagRect = trashBag.getBoundingClientRect();
+                     
+                     // Calculate new bag center with the same offset
+                     const bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25;
+                     const bagCenterY = trashBagRect.top + trashBagRect.height / 2;
+                     
+                     if (item.dataset.finalX && item.dataset.finalY) {
+                         // Get the original offset from the bag center
+                         const oldCenterX = parseFloat(item.dataset.oldCenterX || bagCenterX);
+                         const oldCenterY = parseFloat(item.dataset.oldCenterY || bagCenterY);
+                         
+                         const offsetX = parseFloat(item.dataset.finalX) - oldCenterX;
+                         const offsetY = parseFloat(item.dataset.finalY) - oldCenterY;
+                         
+                         // Apply the same offset to the new bag center
+                         const newX = bagCenterX + offsetX;
+                         const newY = bagCenterY + offsetY;
+                         
+                        // Update position based on item's positioning type
+                        const itemStyle = window.getComputedStyle(item);
+                        const isItemFixed = itemStyle.position === 'fixed';
+                        
+                        if (isItemFixed) {
+                            // For fixed items, use viewport coordinates directly
+                            item.style.left = newX + 'px';
+                            item.style.top = newY + 'px';
+                        } else {
+                            // For absolute items, subtract scroll offset
+                            const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                            item.style.left = (newX - scrollX) + 'px';
+                            item.style.top = (newY - scrollY) + 'px';
+                        }
+                        
+                        // Update stored values for next resize
+                        item.dataset.finalX = newX;
+                        item.dataset.finalY = newY;
+                        item.dataset.oldCenterX = bagCenterX;
+                        item.dataset.oldCenterY = bagCenterY;
+                     }
+                 }
+             });
+         });
+     </script>
+</body>
+</html>
