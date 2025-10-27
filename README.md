@@ -2,6 +2,8 @@
 
 An interactive web application for the West Oakland Cleanup community initiative. This project features an engaging drag-and-drop interface where users can clean up virtual trash items by dropping them into a trash bag.
 
+🌐 **Live Demo**: [https://johnhanshub.github.io/west-oakland-cleanup/](https://johnhanshub.github.io/west-oakland-cleanup/)
+
 ## Features
 
 - **Interactive Drag & Drop**: Click or drag trash items into the trash bag
