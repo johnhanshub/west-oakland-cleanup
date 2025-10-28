@@ -803,7 +803,7 @@
         trashItems.forEach(item => {
             let isDragging = false;
             let startX, startY, startLeft, startTop;
-            let clickStartTime = 0;
+            let clickStartTime = Date.now();
             
             // Get computed position
             function getPosition(el) {
@@ -1018,11 +1018,11 @@
                 const itemCenterX = itemRect.left + itemRect.width / 2;
                 const itemCenterY = itemRect.top + itemRect.height / 2;
                 
-                // Use the actual trash bag bounds for drop zone
-                const dropZoneTop = trashBagRect.top;
-                const dropZoneBottom = trashBagRect.bottom;
+                // Use the trash bag bounds for drop zone with consistent calculation
                 const dropZoneLeft = trashBagRect.left;
                 const dropZoneRight = trashBagRect.right;
+                const dropZoneTop = trashBagRect.top;
+                const dropZoneBottom = trashBagRect.bottom;
                 
                 // Check if center of item is within trash bag bounds
                 if (itemCenterX >= dropZoneLeft && 
@@ -1157,7 +1157,7 @@
                 const itemCenterX = itemRect.left + itemRect.width / 2;
                 const itemCenterY = itemRect.top + itemRect.height / 2;
                 
-                // Use the trash bag bounds for drop zone
+                // Use the trash bag bounds for drop zone with consistent calculation
                 const dropZoneLeft = trashBagRect.left;
                 const dropZoneRight = trashBagRect.right;
                 const dropZoneTop = trashBagRect.top;
@@ -1190,7 +1190,7 @@
                 const itemCenterX = itemRect.left + itemRect.width / 2;
                 const itemCenterY = itemRect.top + itemRect.height / 2;
                 
-                // Use the trash bag bounds for drop zone
+                // Use the trash bag bounds for drop zone with consistent calculation
                 const dropZoneLeft = trashBagRect.left;
                 const dropZoneRight = trashBagRect.right;
                 const dropZoneTop = trashBagRect.top;
