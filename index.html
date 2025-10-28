@@ -1009,6 +1009,12 @@
                     // Increase scale
                     currentScale += 0.05;
                     
+                    // Limit scale in mobile view to prevent interference with trash assets
+                    const maxMobileScale = window.innerWidth <= 810 ? 1.2 : Infinity;
+                    if (currentScale > maxMobileScale) {
+                        currentScale = maxMobileScale;
+                    }
+                    
                     // Set CSS variables for the animation
                     trashBag.style.setProperty('--current-scale', (currentScale - 0.05));
                     trashBag.style.setProperty('--target-scale', currentScale);
@@ -1100,6 +1106,12 @@
          
          // Handle window resize to reposition assets that are in the trash bag
          window.addEventListener('resize', function() {
+             // Limit scale in mobile view to prevent interference with trash assets
+             const maxMobileScale = window.innerWidth <= 810 ? 1.2 : Infinity;
+             if (currentScale > maxMobileScale) {
+                 currentScale = maxMobileScale;
+             }
+             
              // Maintain scaling for trash bag and reset button
              trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
              resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
