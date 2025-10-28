@@ -664,6 +664,13 @@
         @media (max-width: 810px) {
             .trash-item {
                 position: absolute;
+                z-index: 10000;
+            }
+            .trash-item.dragging {
+                z-index: 10001;
+            }
+            .trash-item.celebrating {
+                z-index: 10002;
             }
             .orange-jug-2 {
                 left: 80%;
