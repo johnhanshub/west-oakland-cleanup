@@ -11,11 +11,16 @@
             box-sizing: border-box;
         }
         
+        html {
+            overflow-x: hidden;
+        }
+        
         body {
             background-color: white;
             height: 100vh;
             position: relative;
             overflow: hidden;
+            overflow-x: hidden;
         }
         
         /* Enable scrolling only below 810px breakpoint */
@@ -29,36 +34,36 @@
         
         .background-asset {
             position: fixed;
-            top: 30%;
+            top: 45%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 95vw;
+            width: 75vw;
             height: auto;
             z-index: -1;
             opacity: 1;
-            min-width: 400px;
-            max-width: 1500px;
+            min-width: 350px;
+            max-width: 800px;
         }
         
         /* Responsive scaling for background asset */
         @media (max-width: 768px) {
             .background-asset {
-                width: 95vw;
-                min-width: 350px;
+                width: 80vw;
+                min-width: 320px;
             }
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 374px) {
             .background-asset {
-                width: 90vw;
-                min-width: 300px;
+                width: 75vw;
+                min-width: 280px;
             }
         }
         
         @media (min-width: 1400px) {
             .background-asset {
-                width: 85vw;
-                max-width: 1600px;
+                width: 65vw;
+                max-width: 700px;
             }
         }
         
@@ -91,16 +96,30 @@
             transform: translateX(-50%);
             transform-origin: center bottom;
             z-index: 10;
-            cursor: pointer;
+            opacity: 0.89;
         }
         
-        /* Keep trash bag fixed above 810px, absolute below */
-        @media (max-width: 810px) {
-            .trash-bag {
-                position: absolute;
-                bottom: calc(100vh - 80vh);
-            }
+        .reset-button {
+            width: 125px;
+            height: 200px;
+            position: fixed;
+            bottom: 20vh;
+            left: 51%;
+            transform: translateX(-50%);
+            transform-origin: center bottom;
+            z-index: 15;
+            cursor: pointer;
+            background-color: transparent;
+            border-radius: 24px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: transparent;
+            font-weight: bold;
         }
+        
         
         .trash-item.dragging {
             opacity: 0.5;
@@ -317,12 +336,105 @@
             visibility: hidden;
         }
         
+        .form-container-duplicate {
+            position: fixed;
+            width: 230px;
+            background-color: transparent;
+            padding: 0 20px 20px 20px;
+            z-index: 5;
+            visibility: visible;
+            left: calc(50% - 340px);
+            top: calc(85vh - 5px);
+            transform: translateY(0);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .location-container {
+            position: fixed;
+            width: 230px;
+            background-color: transparent;
+            padding: 0 20px 20px 20px;
+            z-index: 5;
+            visibility: visible;
+            left: calc(50% - 105px);
+            top: calc(85vh - 5px);
+            transform: translateY(0);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .bring-container {
+            position: fixed;
+            width: 230px;
+            background-color: transparent;
+            padding: 0 20px 20px 20px;
+            z-index: 5;
+            visibility: visible;
+            left: calc(50% + 130px);
+            top: calc(85vh - 5px);
+            transform: translateY(0);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
         .form-container h2 {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Helvetica Neue", sans-serif;
             font-weight: 100;
             font-size: 20px;
             margin: 0 0 5px 0;
             line-height: 1;
+            text-align: center;
+        }
+        
+        .date-frame {
+            font-family: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            color: #000000;
+            text-align: center;
+            line-height: 1.1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .location-frame {
+            font-family: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            color: #000000;
+            text-align: center;
+            line-height: 1.1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bring-frame {
+            font-family: "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            color: #000000;
+            text-align: center;
+            line-height: 1.1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .date-line {
+            margin: 0;
+            padding: 2px 0;
         }
         
         .form-group {
@@ -396,13 +508,43 @@
             .form-container {
                 right: calc(18% - 170px);
             }
+            .form-container-duplicate {
+                left: calc(50% - 340px);
+            }
+            .location-container {
+                left: calc(50% - 105px);
+            }
+            .bring-container {
+                left: calc(50% + 130px);
+            }
         }
         
         @media (max-width: 810px) {
             .form-container {
                 position: absolute;
                 left: 50%;
-                top: calc(100vh + 18vh);
+                top: calc(85vh - 5px);
+                transform: translateX(-50%);
+                text-align: center;
+            }
+            .form-container-duplicate {
+                position: absolute;
+                left: 50%;
+                top: calc(100vh - 40vh);
+                transform: translateX(-50%);
+                text-align: center;
+            }
+            .location-container {
+                position: absolute;
+                left: 50%;
+                top: calc(100vh - 25vh);
+                transform: translateX(-50%);
+                text-align: center;
+            }
+            .bring-container {
+                position: absolute;
+                left: 50%;
+                top: calc(100vh - 13vh);
                 transform: translateX(-50%);
                 text-align: center;
             }
@@ -412,12 +554,36 @@
             .form-container {
                 right: calc(22% - 170px);
             }
+            .form-container-duplicate {
+                left: calc(50% - 340px);
+            }
+            .location-container {
+                left: calc(50% - 105px);
+            }
+            .bring-container {
+                left: calc(50% + 130px);
+            }
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 374px) {
             .form-container {
                 right: calc(10% - 170px);
                 left: auto;
+                width: 200px;
+                max-width: none;
+            }
+            .form-container-duplicate {
+                left: calc(50% - 290px);
+                width: 200px;
+                max-width: none;
+            }
+            .location-container {
+                left: calc(50% - 90px);
+                width: 200px;
+                max-width: none;
+            }
+            .bring-container {
+                left: calc(50% + 110px);
                 width: 200px;
                 max-width: none;
             }
@@ -450,8 +616,9 @@
         
         @media (max-width: 810px) {
             .footer {
-                top: calc(100vh + 25vh);
-                height: 5vh;
+                top: calc(100vh + 5vh);
+                height: 10vh !important;
+                background: transparent;
             }
         }
         
@@ -483,7 +650,7 @@
             }
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 374px) {
             .date-asset {
                 left: 10%;
             }
@@ -497,30 +664,39 @@
             .trash-item {
                 position: absolute;
             }
+            .orange-jug-2 {
+                left: 80%;
+            }
             .trash-bag {
                 position: absolute;
-                bottom: calc(100vh - 80vh);
+                bottom: calc(100vh - 55vh);
+            }
+            .reset-button {
+                position: absolute;
+                bottom: calc(100vh - 55vh);
             }
             .background-asset {
                 position: absolute;
                 top: calc(30vh);
+                width: 60vw;
+                min-width: 300px;
             }
             .info-asset {
                 position: absolute;
             }
             .date-asset {
                 left: 50%;
-                top: calc(100vh - 15vh);
+                top: calc(100vh - 25vh);
                 transform: translateX(-50%);
             }
             .location-asset {
                 left: 50%;
-                top: calc(100vh - 3vh);
+                top: calc(100vh - 23vh);
                 transform: translateX(-50%);
             }
             .bring-asset {
                 left: 50%;
-                top: calc(100vh + 5vh);
+                top: calc(100vh - 5vh);
                 transform: translateX(-50%);
             }
         }
@@ -528,10 +704,13 @@
 </head>
 <body>
     <!-- Background asset -->
-    <img src="Assets/Join the next cleanup.png" alt="Join the next cleanup" class="background-asset">
+    <img src="Assets/Join the next CleanUp!.svg" alt="Join the next cleanup" class="background-asset">
     
     <!-- Main trash bag centered at bottom -->
     <img src="Assets/Trash Bag.png" alt="Trash Bag" class="trash-bag">
+    
+    <!-- Reset button -->
+    <div class="reset-button">↻</div>
     
     <!-- Scattered trash items -->
     <img src="Assets/Can.png" alt="Can" class="trash-item can">
@@ -550,9 +729,6 @@
     <img src="Assets/Yellow Cup.png" alt="Yellow Cup" class="trash-item plastic-cup-2">
     
     <!-- Info assets at bottom -->
-    <img src="Assets/Date.png" alt="Date" class="info-asset date-asset">
-    <img src="Assets/Location.png" alt="Location" class="info-asset location-asset">
-    <img src="Assets/Bring.png" alt="Bring" class="info-asset bring-asset">
     
     <!-- Form container -->
     <div class="form-container">
@@ -565,6 +741,33 @@
         </div>
         <div class="form-group">
             <input type="email" class="form-input" placeholder="Email">
+        </div>
+    </div>
+    
+    <!-- Duplicate Form container -->
+    <div class="form-container-duplicate">
+        <h2>🗓️</h2>
+        <div class="date-frame">
+            <p class="date-line">Sunday, November 2,</p>
+            <p class="date-line">10:30am-12:00pm</p>
+        </div>
+    </div>
+    
+    <!-- Location container -->
+    <div class="location-container">
+        <h2>📍</h2>
+        <div class="location-frame">
+            <p class="date-line">Grand and Myrtle</p>
+        </div>
+    </div>
+    
+    <!-- Bring container -->
+    <div class="bring-container">
+        <h2>✅</h2>
+        <div class="bring-frame">
+            <p class="date-line">Bring a friend,</p>
+            <p class="date-line">All supplies provided,</p>
+            <p class="date-line">No experience required</p>
         </div>
     </div>
     
@@ -585,9 +788,10 @@
         // Get all trash items and the trash bag
         const trashItems = document.querySelectorAll('.trash-item');
         const trashBag = document.querySelector('.trash-bag');
+        const resetButton = document.querySelector('.reset-button');
         
-        // Add click event to trash bag to refresh the page
-        trashBag.addEventListener('click', function() {
+        // Add click event to reset button to refresh the page
+        resetButton.addEventListener('click', function() {
             window.scrollTo(0, 0);
             window.location.reload();
         });
@@ -809,6 +1013,9 @@
                     trashBag.style.setProperty('--current-scale', (currentScale - 0.05));
                     trashBag.style.setProperty('--target-scale', currentScale);
                     
+                    // Scale the reset button proportionally
+                    resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
+                    
                     // Calculate position inside trash bag using circular radius centered
                     // Account for scroll offset to get correct positioning
                     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
@@ -879,6 +1086,7 @@
                         trashBag.classList.remove('celebrating');
                         // Keep the scale permanently by setting it directly
                         trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
+                        resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
                     }, 600);
                 } else {
                     // Keep item at the current dropped position
@@ -892,6 +1100,10 @@
          
          // Handle window resize to reposition assets that are in the trash bag
          window.addEventListener('resize', function() {
+             // Maintain scaling for trash bag and reset button
+             trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
+             resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
+             
              trashItems.forEach(item => {
                  // Only reposition items that are celebrating (dropped in trash bag)
                  if (item.classList.contains('celebrating') || (item.dataset.finalX && item.dataset.finalY)) {
