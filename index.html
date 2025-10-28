@@ -803,7 +803,7 @@
         trashItems.forEach(item => {
             let isDragging = false;
             let startX, startY, startLeft, startTop;
-            let clickStartTime = 0;
+            let clickStartTime = Date.now(); // Initialize with current time
             
             // Get computed position
             function getPosition(el) {
@@ -828,6 +828,7 @@
                 }
             }
             
+            // Mouse events for desktop
             item.addEventListener('mousedown', function(e) {
                 if (item.classList.contains('removed') || item.classList.contains('celebrating')) return;
                 
@@ -850,13 +851,37 @@
                 document.addEventListener('mouseup', onDragEnd);
             });
             
+            // Touch events for mobile
+            item.addEventListener('touchstart', function(e) {
+                if (item.classList.contains('removed') || item.classList.contains('celebrating')) return;
+                
+                e.preventDefault();
+                clickStartTime = Date.now();
+                isDragging = true;
+                item.classList.add('dragging');
+                
+                // Get the first touch point
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                const pos = getPosition(item);
+                startLeft = pos.left;
+                startTop = pos.top;
+                
+                // Pause the float animation
+                item.style.animationPlayState = 'paused';
+                
+                document.addEventListener('touchmove', onTouchDrag, { passive: false });
+                document.addEventListener('touchend', onTouchEnd);
+            });
+            
             // Add click event listener for click-to-move functionality
             item.addEventListener('click', function(e) {
                 if (item.classList.contains('removed') || item.classList.contains('celebrating')) return;
                 
                 // Only trigger click-to-move if it wasn't a drag operation
                 const clickDuration = Date.now() - clickStartTime;
-                if (clickDuration < 200 && !isDragging) {
+                if (clickDuration < 300 && !isDragging) { // Increased threshold for better mobile support
                     e.preventDefault();
                     // Simulate drag and drop by directly calling onDragEnd with trash bag position
                     simulateDragToTrash(item);
@@ -1096,6 +1121,144 @@
                 
                                  document.removeEventListener('mousemove', onDrag);
                  document.removeEventListener('mouseup', onDragEnd);
+                 document.removeEventListener('touchmove', onTouchDrag);
+                 document.removeEventListener('touchend', onTouchEnd);
+             }
+             
+             // Touch drag function
+             function onTouchDrag(e) {
+                 if (!isDragging) return;
+                 e.preventDefault();
+                 
+                 const touch = e.touches[0];
+                 const dx = touch.clientX - startX;
+                 const dy = touch.clientY - startY;
+                 
+                 // Calculate new position
+                 const newLeft = startLeft + dx;
+                 const newTop = startTop + dy;
+                 
+                 // Update position using left/top instead of transform
+                 item.style.left = newLeft + 'px';
+                 item.style.top = newTop + 'px';
+                 item.style.right = 'auto';
+                 
+                 // Preserve any existing transforms (like scaleX(-1) for flipped items)
+                 const currentTransform = item.style.transform;
+                 if (currentTransform && currentTransform.includes('scaleX(-1)')) {
+                     item.style.transform = 'scaleX(-1)';
+                 } else {
+                     item.style.transform = '';
+                 }
+                 
+                 // Check if item is over trash bag during drag
+                 const trashBagRect = trashBag.getBoundingClientRect();
+                 const itemRect = item.getBoundingClientRect();
+                 
+                 const itemCenterX = itemRect.left + itemRect.width / 2;
+                 const itemCenterY = itemRect.top + itemRect.height / 2;
+                 
+                 // Use the actual trash bag bounds for drop zone
+                 const dropZoneLeft = trashBagRect.left;
+                 const dropZoneRight = trashBagRect.right;
+                 const dropZoneTop = trashBagRect.top;
+                 const dropZoneBottom = trashBagRect.bottom;
+                 
+                 if (itemCenterX >= dropZoneLeft && 
+                     itemCenterX <= dropZoneRight &&
+                     itemCenterY >= dropZoneTop && 
+                     itemCenterY <= dropZoneBottom) {
+                     
+                     // Trigger drop automatically
+                     onTouchEnd(e);
+                 }
+             }
+             
+             // Touch end function
+             function onTouchEnd(e) {
+                 if (!isDragging) return;
+                 
+                 isDragging = false;
+                 item.classList.remove('dragging');
+                 
+                 // Resume animation
+                 item.style.animationPlayState = 'running';
+                 
+                 // Check if item is over trash bag
+                 const trashBagRect = trashBag.getBoundingClientRect();
+                 const itemRect = item.getBoundingClientRect();
+                 
+                 const itemCenterX = itemRect.left + itemRect.width / 2;
+                 const itemCenterY = itemRect.top + itemRect.height / 2;
+                 
+                 // Use the actual trash bag bounds for drop zone
+                 const dropZoneLeft = trashBagRect.left;
+                 const dropZoneRight = trashBagRect.right;
+                 const dropZoneTop = trashBagRect.top;
+                 const dropZoneBottom = trashBagRect.bottom;
+                 
+                 if (itemCenterX >= dropZoneLeft && 
+                     itemCenterX <= dropZoneRight &&
+                     itemCenterY >= dropZoneTop && 
+                     itemCenterY <= dropZoneBottom) {
+                     
+                     // Increase scale with smaller increment in mobile view
+                     const scaleIncrement = window.innerWidth <= 810 ? 0.02 : 0.05;
+                     currentScale += scaleIncrement;
+                     
+                     // Set CSS variables for the animation
+                     trashBag.style.setProperty('--current-scale', (currentScale - scaleIncrement));
+                     trashBag.style.setProperty('--target-scale', currentScale);
+                     
+                     // Scale the reset button proportionally
+                     resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
+                     
+                     // Calculate position inside trash bag using circular radius centered
+                     // Account for scroll offset to get correct positioning
+                     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                     
+                     // Calculate bag center with scroll offset
+                     const bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25 + scrollX;
+                     const bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                     
+                     // Calculate random position within circular area
+                     const radius = Math.min(trashBagRect.width, trashBagRect.height) * 0.15;
+                     const angle = Math.random() * 2 * Math.PI;
+                     const distance = Math.random() * radius;
+                     
+                     const finalX = bagCenterX + Math.cos(angle) * distance - itemRect.width / 2;
+                     const finalY = bagCenterY + Math.sin(angle) * distance - itemRect.height / 2;
+                     
+                     // Store final position for window resize handling
+                     item.dataset.finalX = finalX;
+                     item.dataset.finalY = finalY;
+                     
+                     // Add celebrating class for animation
+                     item.classList.add('celebrating');
+                     
+                     // Animate to final position
+                     item.style.left = finalX + 'px';
+                     item.style.top = finalY + 'px';
+                     item.style.right = 'auto';
+                     
+                     // Start celebration animation
+                     trashBag.classList.add('celebrating');
+                     
+                     // Remove celebrating class after animation
+                     setTimeout(() => {
+                         trashBag.classList.remove('celebrating');
+                         // Keep the scale permanently by setting it directly
+                         trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
+                         resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
+                     }, 600);
+                 } else {
+                     // Keep item at the current dropped position
+                     // The left and top are already set during dragging, so no change needed
+                 }
+                 
+                 document.removeEventListener('touchmove', onTouchDrag);
+                 document.removeEventListener('touchend', onTouchEnd);
              }
          });
          
