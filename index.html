@@ -903,15 +903,15 @@
                 
                 let bagCenterX, bagCenterY;
                 if (isTrashBagFixed) {
-                    // For fixed trash bag, use viewport coordinates
-                    bagCenterX = trashBagRect.left + trashBagRect.width / 2;
-                    bagCenterY = trashBagRect.top + trashBagRect.height / 2;
-                } else {
-                    // For absolute trash bag, add scroll offset
+                    // For fixed positioning, add scroll offset and center offset
                     const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
                     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-                    bagCenterX = trashBagRect.left + trashBagRect.width / 2 + scrollX;
+                    bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25 + scrollX;
                     bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                } else {
+                    // For absolute positioning, use viewport coordinates directly
+                    bagCenterX = trashBagRect.left + trashBagRect.width / 2;
+                    bagCenterY = trashBagRect.top + trashBagRect.height / 2;
                 }
                 
                 // Position item at trash bag center to trigger drop
@@ -1042,11 +1042,22 @@
                     resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
                     
                     // Calculate position inside trash bag using circular radius centered
-                    // Account for scroll offset to get correct positioning
-                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-                    const bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25 + scrollX;
-                    const bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                    // Handle different positioning methods (fixed vs absolute)
+                    const trashBagStyle = window.getComputedStyle(trashBag);
+                    const isTrashBagFixed = trashBagStyle.position === 'fixed';
+                    
+                    let bagCenterX, bagCenterY;
+                    if (isTrashBagFixed) {
+                        // For fixed positioning, add scroll offset and center offset
+                        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                        bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25 + scrollX;
+                        bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                    } else {
+                        // For absolute positioning, use viewport coordinates directly
+                        bagCenterX = trashBagRect.left + trashBagRect.width / 2;
+                        bagCenterY = trashBagRect.top + trashBagRect.height / 2;
+                    }
                     
                     // Use the smaller dimension as the radius to ensure circle fits within bag
                     const radius = Math.min(trashBagRect.width, trashBagRect.height) / 3;
@@ -1213,13 +1224,22 @@
                     resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
                     
                     // Calculate position inside trash bag using circular radius centered
-                    // Account for scroll offset to get correct positioning
-                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    // Handle different positioning methods (fixed vs absolute)
+                    const trashBagStyle = window.getComputedStyle(trashBag);
+                    const isTrashBagFixed = trashBagStyle.position === 'fixed';
                     
-                    // Calculate bag center with scroll offset
-                    const bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25 + scrollX;
-                    const bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                    let bagCenterX, bagCenterY;
+                    if (isTrashBagFixed) {
+                        // For fixed positioning, add scroll offset and center offset
+                        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                        bagCenterX = trashBagRect.left + trashBagRect.width / 2 - trashBagRect.width * 0.25 + scrollX;
+                        bagCenterY = trashBagRect.top + trashBagRect.height / 2 + scrollY;
+                    } else {
+                        // For absolute positioning, use viewport coordinates directly
+                        bagCenterX = trashBagRect.left + trashBagRect.width / 2;
+                        bagCenterY = trashBagRect.top + trashBagRect.height / 2;
+                    }
                     
                     // Calculate random position within circular area
                     const radius = Math.min(trashBagRect.width, trashBagRect.height) * 0.15;
