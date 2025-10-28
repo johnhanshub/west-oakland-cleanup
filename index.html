@@ -81,6 +81,7 @@
             max-height: 15vh;
             min-width: 40px;
             min-height: 40px;
+            z-index: 10000;
         }
         
         .trash-item:active {
@@ -123,7 +124,7 @@
         
         .trash-item.dragging {
             opacity: 0.5;
-            z-index: 100;
+            z-index: 10001;
         }
         
         .trash-item.removed {
@@ -131,7 +132,7 @@
         }
         
         .trash-item.celebrating {
-            z-index: 1000;
+            z-index: 10002;
             pointer-events: none;
             animation: celebrateItem 0.6s ease-out forwards;
         }
@@ -883,6 +884,7 @@
                 }
             });
             
+            
             // Function to simulate dragging item to trash bag
             function simulateDragToTrash(item) {
                 // Set up the item as if it's being dragged
@@ -1198,7 +1200,13 @@
                     // Resume animation
                     item.style.animationPlayState = 'running';
                 } else {
-                    // No dragging occurred, this was a tap - let click event handle it
+                    // No dragging occurred, this was a tap - handle click-to-move
+                    const clickDuration = Date.now() - clickStartTime;
+                    if (clickDuration < 200 && !item.classList.contains('removed') && !item.classList.contains('celebrating')) {
+                        e.preventDefault();
+                        // Simulate drag and drop by directly calling onDragEnd with trash bag position
+                        simulateDragToTrash(item);
+                    }
                     return;
                 }
                 
