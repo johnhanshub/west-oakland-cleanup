@@ -856,8 +856,7 @@
                 
                 e.preventDefault();
                 clickStartTime = Date.now();
-                isDragging = true;
-                item.classList.add('dragging');
+                isDragging = false; // Start as false, will be set to true on movement
                 
                 // Get the first touch point
                 const touch = e.touches[0];
@@ -866,9 +865,6 @@
                 const pos = getPosition(item);
                 startLeft = pos.left;
                 startTop = pos.top;
-                
-                // Pause the float animation
-                item.style.animationPlayState = 'paused';
                 
                 document.addEventListener('touchmove', onTouchDrag, { passive: false });
                 document.addEventListener('touchend', onTouchEnd);
@@ -1137,12 +1133,21 @@
             
             // Touch drag function
             function onTouchDrag(e) {
-                if (!isDragging) return;
                 e.preventDefault();
                 
                 const touch = e.touches[0];
                 const dx = touch.clientX - startX;
                 const dy = touch.clientY - startY;
+                
+                // Only start dragging if there's significant movement
+                if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                    isDragging = true;
+                    item.classList.add('dragging');
+                    // Pause the float animation
+                    item.style.animationPlayState = 'paused';
+                }
+                
+                if (!isDragging) return;
                 
                 // Calculate new position
                 const newLeft = startLeft + dx;
@@ -1186,13 +1191,16 @@
             
             // Touch end function
             function onTouchEnd(e) {
-                if (!isDragging) return;
-                
-                isDragging = false;
-                item.classList.remove('dragging');
-                
-                // Resume animation
-                item.style.animationPlayState = 'running';
+                if (isDragging) {
+                    isDragging = false;
+                    item.classList.remove('dragging');
+                    
+                    // Resume animation
+                    item.style.animationPlayState = 'running';
+                } else {
+                    // No dragging occurred, this was a tap - let click event handle it
+                    return;
+                }
                 
                 // Check if item is over trash bag (drop zone)
                 const trashBagRect = trashBag.getBoundingClientRect();
