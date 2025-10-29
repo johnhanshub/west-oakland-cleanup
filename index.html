@@ -125,21 +125,13 @@
             font-family: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-weight: bold;
             color: #00B545;
-            font-size: 18px;
-            line-height: 1.2;
+            font-size: 48px;
+            line-height: 1;
             text-align: center;
             pointer-events: none;
-            transform: translate(-3px, 18px);
+            transform: translate(0, 0);
             z-index: 10003;
             opacity: 0.95;
-            display: none;
-        }
-        
-        /* Show reset text only on mobile */
-        @media (max-width: 810px) {
-            .reset-text {
-                display: block;
-            }
         }
         
         
@@ -718,8 +710,8 @@
                 bottom: calc(100vh - 55vh);
             }
             .reset-text {
-                font-size: 15px;
-                transform: translate(-2px, 14px);
+                font-size: 36px;
+                transform: translate(0, 0);
                 z-index: 10003;
                 opacity: 0.95;
             }
@@ -759,7 +751,7 @@
     
     <!-- Reset button -->
         <div class="reset-button">
-            <div class="reset-text">West<br>Oakland<br>CleanUp</div>
+            <div class="reset-text">↻</div>
         </div>
     
     <!-- Scattered trash items -->
