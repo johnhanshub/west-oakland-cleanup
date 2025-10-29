@@ -121,6 +121,19 @@
             font-weight: bold;
         }
         
+        .reset-text {
+            font-family: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: bold;
+            color: #00B545;
+            font-size: 18px;
+            line-height: 1.2;
+            text-align: center;
+            pointer-events: none;
+            transform: translate(-3px, 18px);
+            z-index: 10003;
+            opacity: 0.95;
+        }
+        
         
         .trash-item.dragging {
             opacity: 0.5;
@@ -164,7 +177,20 @@
             animation: scaleUp 0.3s ease-out forwards;
         }
         
+        .reset-button.celebrating {
+            animation: resetButtonScaleUp 0.3s ease-out forwards;
+        }
+        
         @keyframes scaleUp {
+            0% {
+                transform: translateX(-50%) scale(var(--current-scale, 1));
+            }
+            100% {
+                transform: translateX(-50%) scale(var(--target-scale, 1.05));
+            }
+        }
+        
+        @keyframes resetButtonScaleUp {
             0% {
                 transform: translateX(-50%) scale(var(--current-scale, 1));
             }
@@ -683,6 +709,12 @@
                 position: absolute;
                 bottom: calc(100vh - 55vh);
             }
+            .reset-text {
+                font-size: 15px;
+                transform: translate(-2px, 14px);
+                z-index: 10003;
+                opacity: 0.95;
+            }
             .background-asset {
                 position: absolute;
                 top: calc(30vh);
@@ -718,7 +750,9 @@
     <img src="Assets/Trash Bag.png" alt="Trash Bag" class="trash-bag">
     
     <!-- Reset button -->
-    <div class="reset-button">↻</div>
+        <div class="reset-button">
+            <div class="reset-text">West<br>Oakland<br>CleanUp</div>
+        </div>
     
     <!-- Scattered trash items -->
     <img src="Assets/Can.png" alt="Can" class="trash-item can">
@@ -798,14 +832,136 @@
         const trashBag = document.querySelector('.trash-bag');
         const resetButton = document.querySelector('.reset-button');
         
+        // Add click down event to reset button to close trash bag
+        resetButton.addEventListener('mousedown', function() {
+            if (!isTrashBagClosed) {
+                trashBag.src = 'Assets/Trash Bag Closed.png';
+                isTrashBagClosed = true;
+            }
+            applyPressedScale();
+        });
+        
+        resetButton.addEventListener('touchstart', function() {
+            if (!isTrashBagClosed) {
+                trashBag.src = 'Assets/Trash Bag Closed.png';
+                isTrashBagClosed = true;
+            }
+            applyPressedScale();
+        });
+
+        // Revert scale on release or when pointer leaves
+        resetButton.addEventListener('mouseup', function() { revertPressedScale(); });
+        resetButton.addEventListener('mouseleave', function() { revertPressedScale(); });
+        resetButton.addEventListener('touchend', function() { revertPressedScale(); });
+        resetButton.addEventListener('touchcancel', function() { revertPressedScale(); });
+        
         // Add click event to reset button to refresh the page
         resetButton.addEventListener('click', function() {
+            // Reset dropped items count
+            droppedItemsCount = 0;
+            // Reset trash bag to open state
+            trashBag.src = 'Assets/Trash Bag.png';
+            isTrashBagClosed = false;
             window.scrollTo(0, 0);
             window.location.reload();
         });
         
         // Track the current scale of the trash bag
         let currentScale = 1;
+        
+        // Track dropped items
+        let droppedItemsCount = 0;
+        const totalTrashItems = trashItems.length;
+        
+        // Track trash bag state
+        let isTrashBagClosed = false;
+        
+        // Scale down visuals while press is active
+        function applyPressedScale() {
+            // Scale trash bag slightly smaller based on currentScale
+            trashBag.style.transform = `translateX(-50%) scale(${currentScale * 0.98})`;
+            
+            // Scale reset button and text
+            resetButton.style.transform = `translateX(-50%) scale(${currentScale * 0.98})`;
+            
+            // Scale down only items that have been dropped inside the bag
+            trashItems.forEach(item => {
+                // Check if item has been dropped (has final position stored)
+                const hasFinalPosition = item.dataset.finalX !== undefined && item.dataset.finalY !== undefined && 
+                                         item.dataset.finalX !== '' && item.dataset.finalY !== '';
+                
+                if (hasFinalPosition) {
+                    // Pause any running animations that might interfere
+                    item.style.animationPlayState = 'paused';
+                    
+                    // Get current transform from style attribute or computed style
+                    const currentInlineTransform = item.style.transform || '';
+                    const computedStyle = window.getComputedStyle(item);
+                    const currentComputedTransform = computedStyle.transform;
+                    
+                    // Determine the actual current transform (prefer inline over computed)
+                    let actualTransform = '';
+                    if (currentInlineTransform && currentInlineTransform !== 'none' && currentInlineTransform.trim() !== '') {
+                        actualTransform = currentInlineTransform;
+                    } else if (currentComputedTransform && currentComputedTransform !== 'none') {
+                        actualTransform = currentComputedTransform;
+                    }
+                    
+                    // Save the original transform if not already saved
+                    if (item.dataset.prevTransform === undefined) {
+                        item.dataset.prevTransform = actualTransform || '';
+                        item.dataset.prevAnimationState = item.style.animationPlayState || 'running';
+                    }
+                    
+                    // Mark that we've applied pressed scale
+                    item.dataset.pressedScale = 'true';
+                    
+                    // Apply scale by combining with existing transform
+                    if (actualTransform && actualTransform !== 'none') {
+                        item.style.transform = actualTransform + ' scale(0.98)';
+                    } else {
+                        item.style.transform = 'scale(0.98)';
+                    }
+                }
+            });
+        }
+        
+        // Revert press scaling
+        function revertPressedScale() {
+            trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
+            resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
+            trashItems.forEach(item => {
+                if (item.dataset.prevTransform !== undefined) {
+                    // Restore the previous transform, or clear it if it was empty
+                    const prevTransform = item.dataset.prevTransform;
+                    if (prevTransform && prevTransform !== 'none' && prevTransform.trim() !== '') {
+                        item.style.transform = prevTransform;
+                    } else {
+                        item.style.transform = '';
+                    }
+                    
+                    // Restore animation play state if it was saved
+                    if (item.dataset.prevAnimationState !== undefined) {
+                        item.style.animationPlayState = item.dataset.prevAnimationState;
+                        delete item.dataset.prevAnimationState;
+                    } else {
+                        // If no previous state saved, resume animations
+                        item.style.animationPlayState = 'running';
+                    }
+                    
+                    delete item.dataset.prevTransform;
+                    delete item.dataset.pressedScale;
+                }
+            });
+        }
+        
+        // Function to check if all items are dropped and change trash bag
+        function checkAllItemsDropped() {
+            if (droppedItemsCount >= totalTrashItems) {
+                trashBag.src = 'Assets/Trash Bag Closed.png';
+                isTrashBagClosed = true;
+            }
+        }
         
         // Make trash items draggable and clickable
         trashItems.forEach(item => {
@@ -1042,9 +1198,10 @@
                     // Set CSS variables for the animation
                     trashBag.style.setProperty('--current-scale', (currentScale - scaleIncrement));
                     trashBag.style.setProperty('--target-scale', currentScale);
+                    resetButton.style.setProperty('--current-scale', (currentScale - scaleIncrement));
+                    resetButton.style.setProperty('--target-scale', currentScale);
                     
-                    // Scale the reset button proportionally
-                    resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
+                    // Reset button will be scaled via CSS animation
                     
                     // Calculate position inside trash bag using circular radius centered
                     // Handle different positioning methods (fixed vs absolute)
@@ -1101,6 +1258,11 @@
                     // Add celebration animation
                     item.classList.add('celebrating');
                     trashBag.classList.add('celebrating');
+                    resetButton.classList.add('celebrating');
+                    
+                    // Increment dropped items count and check if all are dropped
+                    droppedItemsCount++;
+                    checkAllItemsDropped();
                     
                     // Keep the item visible but faded after animation
                     setTimeout(() => {
@@ -1125,6 +1287,7 @@
                         }
                         
                         trashBag.classList.remove('celebrating');
+                        resetButton.classList.remove('celebrating');
                         // Keep the scale permanently by setting it directly
                         trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
                         resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
@@ -1242,9 +1405,10 @@
                     // Set CSS variables for the animation
                     trashBag.style.setProperty('--current-scale', (currentScale - scaleIncrement));
                     trashBag.style.setProperty('--target-scale', currentScale);
+                    resetButton.style.setProperty('--current-scale', (currentScale - scaleIncrement));
+                    resetButton.style.setProperty('--target-scale', currentScale);
                     
-                    // Scale the reset button proportionally
-                    resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
+                    // Reset button will be scaled via CSS animation
                     
                     // Calculate position inside trash bag using circular radius centered
                     // Handle different positioning methods (fixed vs absolute)
@@ -1287,9 +1451,14 @@
                     // Start celebration animation
                     trashBag.classList.add('celebrating');
                     
+                    // Increment dropped items count and check if all are dropped
+                    droppedItemsCount++;
+                    checkAllItemsDropped();
+                    
                     // Remove celebrating class after animation
                     setTimeout(() => {
                         trashBag.classList.remove('celebrating');
+                        resetButton.classList.remove('celebrating');
                         // Keep the scale permanently by setting it directly
                         trashBag.style.transform = `translateX(-50%) scale(${currentScale})`;
                         resetButton.style.transform = `translateX(-50%) scale(${currentScale})`;
