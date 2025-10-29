@@ -132,6 +132,14 @@
             transform: translate(-3px, 18px);
             z-index: 10003;
             opacity: 0.95;
+            display: none;
+        }
+        
+        /* Show reset text only on mobile */
+        @media (max-width: 810px) {
+            .reset-text {
+                display: block;
+            }
         }
         
         
